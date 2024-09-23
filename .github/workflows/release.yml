@@ -41,6 +41,6 @@ jobs:
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: |
-            Automated release for tag ${{ github.ref_name }}.
+            Automated Linux release for tag ${{ github.ref_name }}.
           draft: false
           prerelease: false
