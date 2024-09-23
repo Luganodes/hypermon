@@ -1,27 +1,45 @@
-# .github/workflows/release.yml
+name: Automated Release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - 'v*'        # Triggers the workflow on tags starting with 'v'
 
 jobs:
-  release:
-    name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
+  build-and-release:
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        include:
-          - target: x86_64-unknown-linux-musl
-            archive: tar.gz tar.xz tar.zst
-          - target: x86_64-apple-darwin
-            archive: zip
+        os: [ubuntu-latest]
+        target: [x86_64-unknown-linux-gnu]
     steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check Out Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          ARCHIVE_TYPES: ${{ matrix.archive }}
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Build Project
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Archive Binaries
+        run: |
+          mkdir artifacts
+          cp target/${{ matrix.target }}/release/<your-binary-name>${{ steps.extension.outputs.value }} artifacts/
+
+      - name: Create GitHub Release
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: artifacts/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            Automated release for tag ${{ github.ref_name }}.
+          draft: false
+          prerelease: false
