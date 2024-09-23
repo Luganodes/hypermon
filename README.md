@@ -5,13 +5,46 @@ The minimal all in one tool to monitor your Hyperliquid validator. Built by indu
 
 Hypermon can:
 - Expose metrics for Prometheus
-- Send alerts to your Telegram group
+- Send alerts to your Telegram group (Check TODOs at the bottom)
 
-## Index
-1. Installation
-2. Usage
-3. Commands and Flags 
+## Installation
+Checkout [releases](https://github.com/Luganodes/hypermon/releases) or build it yourself:
+```bash
+# Setup your rust environment
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-## TODO
+git clone https://github.com/Luganodes/hypermon.git
+cd hypermon
+cargo build --release
+```
+
+## Commands and Flags
+### `start`
+To start the exporter with default flags
+```bash
+hypermon start
+```
+Flags:
+| Name | Default | Description |
+| ----------- | ----------- | ----------- |
+| `--only-telegram` | false | Only start the telegram notifications |
+| `--only-metrics` | false | Only start the metrics server |
+| `--tg-api-key` | NONE | If `--only-telegram` is set, this is the TG bot's API key |
+| `--tg-chat-id` | NONE | If `--only-telegram` is set, this is the TG channel's ID |
+| `--metrics-port` | 6969 | The port on which the metrics server should serve metrics |
+| `--metrics-addr` | 0.0.0.0 | The address on which the metrics server should serve metrics |
+| `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics |
+
+## Metrics Served
+```
+hyperliquid_validator_recent_blocks{address="val address"} # The validator's recent blocks
+hyperliquid_validator_is_jailed{address="val address"} # The validator's jail status
+hyperliquid_validator_stake{address="val address"} # The validator's stake
+hyperliquid_network_total_active_stake # The total active stake on the network
+hyperliquid_network_total_jailed_stake # The total jailed stake on the network
+hyperliquid_network_total_validators # The total validators on the network
+hyperliquid_request_time # The time it takes to make a request to the Info endpoint
+```
+
+## Todo
 - [ ] Add support for telegram notifications
-- [ ] Fill out the rest of the README.md
