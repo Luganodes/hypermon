@@ -29,7 +29,7 @@ jobs:
       - name: Archive Binaries
         run: |
           mkdir artifacts
-          cp target/${{ matrix.target }}/release/<your-binary-name>${{ steps.extension.outputs.value }} artifacts/
+          cp target/${{ matrix.target }}/release/hypermon${{ steps.extension.outputs.value }} artifacts/
 
       - name: Create GitHub Release
         if: ${{ matrix.os == 'ubuntu-latest' }}
