@@ -7,6 +7,18 @@ pub enum HypermonError {
 
     #[error("Deserialization Error: {0}")]
     DeserializationError(#[source] anyhow::Error),
+
+    #[error("Something went wrong internall")]
+    InternalServerError,
+
+    #[error("Register error")]
+    RegisterError(#[source] anyhow::Error),
+    
+    #[error("Error while encoding metric families")]
+    EncodeError(#[source] anyhow::Error),
+
+    #[error("IO Error: {0}")]
+    IOError(#[from] std::io::Error),
 }
 
 impl ResponseError for HypermonError {
@@ -14,6 +26,10 @@ impl ResponseError for HypermonError {
         match self {
             HypermonError::ResponseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             HypermonError::DeserializationError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            HypermonError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+            HypermonError::RegisterError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            HypermonError::EncodeError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            HypermonError::IOError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

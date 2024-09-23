@@ -1,5 +1,5 @@
 use clap::ArgMatches;
-use tracing::info;
+use tracing::{error, info};
 
 use crate::server;
 
@@ -25,13 +25,18 @@ pub async fn start(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Start the prometheus server
     let server_handle = tokio::spawn(async move {
-        _ = server::start(metrics_addr, metrics_port, info_url)
-            .await
-            .unwrap()
-            .await;
+        match server::start(metrics_addr, metrics_port, info_url)
+            .await {
+                Ok(server) => {
+                    _ = server.await;
+                },
+                Err(err) => {
+                    error!("Received error: {err:?}");
+                }
+            }
     });
 
-    // and optionally start the telegram bot if the API key and chat ID are present
+    // TODO: optionally start the telegram bot if the API key and chat ID are present
 
     _ = server_handle.await;
     Ok(())
