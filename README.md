@@ -37,13 +37,26 @@ Flags:
 
 ## Metrics Served
 ```
-hyperliquid_validator_recent_blocks{address="val address"} # The validator's recent blocks
-hyperliquid_validator_is_jailed{address="val address"} # The validator's jail status
-hyperliquid_validator_stake{address="val address"} # The validator's stake
-hyperliquid_network_total_active_stake # The total active stake on the network
-hyperliquid_network_total_jailed_stake # The total jailed stake on the network
-hyperliquid_network_total_validators # The total validators on the network
-hyperliquid_request_time # The time it takes to make a request to the Info endpoint
+# The validator's recent blocks
+hyperliquid_validator_recent_blocks{address="val address"}
+
+# The validator's jail status
+hyperliquid_validator_is_jailed{address="val address"}
+
+# The validator's stake
+hyperliquid_validator_stake{address="val address"}
+
+# The total active stake on the network
+hyperliquid_network_total_active_stake 
+
+# The total jailed stake on the network
+hyperliquid_network_total_jailed_stake 
+
+# The total validators on the network
+hyperliquid_network_total_validators 
+
+# The time it takes to make a request to the Info endpoint
+hyperliquid_request_time 
 ```
 
 ## Todo
