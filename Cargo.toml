@@ -6,11 +6,9 @@ edition = "2021"
 [dependencies]
 clap = "4.5.18"
 anyhow = "1.0.86"
-dotenv = "0.15.0"
 color-eyre = "0.6"
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-indicatif = { version = "0.17.8", features = ["tokio"] }
 reqwest = { version = "0.12.7", features = ["json"] }
 tokio = { version = "1.40.0", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1.0.210", features = ["derive"] }
