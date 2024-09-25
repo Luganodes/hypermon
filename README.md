@@ -62,3 +62,5 @@ hyperliquid_request_time
 ## Todo
 - [ ] Add support for telegram notifications
 - [ ] Pull valuable/necessary info from EVM RPC if it is provided
+- [ ] Create setup script for easy download and systemd service setup
+- [ ] Fix `--only-*` flags
