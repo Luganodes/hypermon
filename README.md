@@ -61,3 +61,4 @@ hyperliquid_request_time
 
 ## Todo
 - [ ] Add support for telegram notifications
+- [ ] Pull valuable/necessary info from EVM RPC if it is provided
