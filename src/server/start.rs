@@ -13,7 +13,10 @@ use reqwest::{
 };
 use tracing::{error, info};
 
-use crate::types::{HypermonError, Query, Validator};
+use crate::{
+    helpers::Sender,
+    types::{HypermonError, Query, Validator},
+};
 
 lazy_static! {
     static ref RECENT_BLOCKS: GaugeVec = GaugeVec::new(
@@ -57,7 +60,13 @@ lazy_static! {
     static ref REGISTRY: Registry = Registry::new();
 }
 
-pub async fn start(listen_addr: String, port: u16, info_url: String) -> Result<Server, HypermonError> {
+pub async fn start(
+    listen_addr: String,
+    port: u16,
+    info_url: String,
+    token: String,
+    chat_id: String,
+) -> Result<Server, HypermonError> {
     let mut headers = HeaderMap::new();
     headers.insert(
         CONTENT_TYPE,
@@ -98,6 +107,7 @@ pub async fn start(listen_addr: String, port: u16, info_url: String) -> Result<S
         .context("Couldn't register request_time")
         .map_err(|e| HypermonError::RegisterError(e.into()))?;
 
+    let sender = Sender { token, chat_id };
 
     let server = HttpServer::new(move || {
         App::new()
@@ -105,6 +115,7 @@ pub async fn start(listen_addr: String, port: u16, info_url: String) -> Result<S
             .route("/metrics", web::get().to(get_metrics))
             .app_data(web::Data::new(client.clone()))
             .app_data(web::Data::new(info_url.clone()))
+            .app_data(web::Data::new(sender.clone()))
     })
     .bind((listen_addr, port))?
     .run();
@@ -116,6 +127,7 @@ async fn get_metrics(
     req: HttpRequest,
     client: Data<Client>,
     info_url: Data<String>,
+    sender: Data<Sender>,
 ) -> Result<HttpResponse, HypermonError> {
     info!("Request to: {}", req.head().uri);
 
@@ -143,15 +155,34 @@ async fn get_metrics(
     let mut total_jailed_stake: f64 = 0.0;
 
     for validator in validators.iter() {
+        let addr = validator.validator.as_str();
+        let is_jailed = if validator.is_jailed { 1.0 } else { 0.0 };
+        let stake = validator.stake as f64;
+        let name = validator.name.clone();
+
         RECENT_BLOCKS
-            .with_label_values(&[validator.validator.as_str()])
+            .with_label_values(&[addr])
             .set(validator.n_recent_blocks as f64);
-        IS_JAILED
-            .with_label_values(&[validator.validator.as_str()])
-            .set(if validator.is_jailed { 1.0 } else { 0.0 });
-        STAKE
-            .with_label_values(&[validator.validator.as_str()])
-            .set(validator.stake as f64);
+        IS_JAILED.with_label_values(&[addr]).set(is_jailed);
+        STAKE.with_label_values(&[addr]).set(validator.stake as f64);
+
+        if !IS_JAILED.with_label_values(&[addr]).get().eq(&is_jailed) {
+            if is_jailed == 1.0 {
+                _ = sender.send_message(format!("🚨 __{}__ is now *jailed\\!*", name)).await;
+            } else {
+                _ = sender.send_message(format!("✅ __{}__ is now unjailed\\!", name)).await;
+            }
+        }
+
+        let last_stake = STAKE.with_label_values(&[addr]).get();
+        if !STAKE.with_label_values(&[addr]).get().eq(&stake) {
+            _ = sender.send_message(format!(
+                "__{}__ stake changed by __{}__ to *{}*\\!",
+                name,
+                (stake - last_stake).to_string().replace(".", "\\."),
+                stake.to_string().replace(".", "\\.")
+            )).await;
+        }
 
         if !validator.is_jailed {
             total_active_stake += validator.stake as f64;
@@ -160,9 +191,31 @@ async fn get_metrics(
         }
     }
 
+    if !TOTAL_ACTIVE_STAKE.get().eq(&total_active_stake) {
+        _ = sender.send_message(format!(
+            "🥩 Total *active* network stake has changed to __{}__\\!",
+            total_active_stake
+        )).await;
+    }
+
+    if !TOTAL_JAILED_STAKE.get().eq(&total_jailed_stake) {
+        _ = sender.send_message(format!(
+            "🥩 Total *jailed* network stake has changed to __{}__\\!",
+            total_active_stake
+        )).await;
+    }
+
+    let total_vals = validators.len() as f64;
+    if !TOTAL_VALIDATORS.get().eq(&total_vals) {
+        _ = sender.send_message(format!(
+            "#️⃣ Total validators on the network: __{}__\\!",
+            total_vals
+        )).await;
+    }
+
     TOTAL_ACTIVE_STAKE.set(total_active_stake);
     TOTAL_JAILED_STAKE.set(total_jailed_stake);
-    TOTAL_VALIDATORS.set(validators.len() as f64);
+    TOTAL_VALIDATORS.set(total_vals);
 
     let encoder = TextEncoder::new();
 

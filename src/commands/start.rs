@@ -25,15 +25,22 @@ pub async fn start(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Start the prometheus server
     let server_handle = tokio::spawn(async move {
-        match server::start(metrics_addr, metrics_port, info_url)
-            .await {
-                Ok(server) => {
-                    _ = server.await;
-                },
-                Err(err) => {
-                    error!("Received error: {err:?}");
-                }
+        match server::start(
+            metrics_addr,
+            metrics_port,
+            info_url,
+            tg_api_key.unwrap_or("").to_string(),
+            tg_chat_id.unwrap_or("").to_string(),
+        )
+        .await
+        {
+            Ok(server) => {
+                _ = server.await;
             }
+            Err(err) => {
+                error!("Received error: {err:?}");
+            }
+        }
     });
 
     // TODO: optionally start the telegram bot if the API key and chat ID are present

@@ -9,13 +9,16 @@ struct SendMessageParams {
     parse_mode: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct Sender {
-    token: String,
-    chat_id: String,
+    pub token: String,
+    pub chat_id: String,
 }
 
 impl Sender {
     pub async fn send_message(&self, message: String) -> anyhow::Result<()> {
+        if self.token.len() == 0 || self.chat_id.len() == 0 { return Ok(()) }
+
         let url = format!("https://api.telegram.org/bot{}/sendMessage", self.token);
 
         let params = SendMessageParams {
