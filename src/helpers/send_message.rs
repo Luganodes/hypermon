@@ -17,7 +17,9 @@ pub struct Sender {
 
 impl Sender {
     pub async fn send_message(&self, message: String) -> anyhow::Result<()> {
-        if self.token.len() == 0 || self.chat_id.len() == 0 { return Ok(()) }
+        if self.token.len() == 0 || self.chat_id.len() == 0 {
+            return Ok(());
+        }
 
         let url = format!("https://api.telegram.org/bot{}/sendMessage", self.token);
 
@@ -28,16 +30,21 @@ impl Sender {
         };
 
         let client = Client::new();
-        let response = client.post(&url).json(&params).send().await?;
-        let status = response.status();
-        let text = response.text().await?;
 
-        if status.is_success() {
-            info!("Sending: {}", message);
-            Ok(())
-        } else {
-            error!("Error sending message: {} | Status: {}", text, status);
-            Err(anyhow::anyhow!(text))
-        }
+        tokio::spawn(async move {
+            let response = client.post(&url).json(&params).send().await?;
+            let status = response.status();
+            let text = response.text().await?;
+
+            if status.is_success() {
+                info!("Sending: {}", message);
+                Ok(())
+            } else {
+                error!("Error sending message: {} | Status: {}", text, status);
+                Err(anyhow::anyhow!(text))
+            }
+        });
+
+        Ok(())
     }
 }

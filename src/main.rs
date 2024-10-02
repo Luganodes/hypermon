@@ -6,7 +6,8 @@ async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
 
     let subscriber = tracing_subscriber::fmt()
-        .with_target(false)
+        .with_line_number(true)
+        .with_target(true)
         .with_ansi(true)
         .with_level(true)
         .finish();
@@ -40,8 +41,14 @@ async fn main() -> color_eyre::Result<()> {
                         .num_args(0..=1)
                         .default_value("false")
                         .default_missing_value("true"),
-                    Arg::new("tg-api-key").long("tg-api-key").requires("tg-chat-id"),
-                    Arg::new("tg-chat-id").long("tg-chat-id").requires("tg-api-key"),
+                    Arg::new("tg-api-key")
+                        .long("tg-api-key")
+                        .requires("tg-chat-id")
+                        .default_value(""),
+                    Arg::new("tg-chat-id")
+                        .long("tg-chat-id")
+                        .requires("tg-api-key")
+                        .default_value(""),
                     Arg::new("metrics-port")
                         .long("metrics-port")
                         .value_parser(value_parser!(u16))

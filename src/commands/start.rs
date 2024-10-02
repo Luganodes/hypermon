@@ -6,10 +6,17 @@ use crate::server;
 pub async fn start(args: &ArgMatches) -> anyhow::Result<()> {
     let only_metrics = args.get_one::<bool>("only-metrics").copied().unwrap();
     let only_telegram = args.get_one::<bool>("only-telegram").copied().unwrap();
-    let tg_api_key = args.get_one::<&str>("tg-api-key").copied();
-    let tg_chat_id = args.get_one::<&str>("tg-chat-id").copied();
+    let tg_api_key = args
+        .get_one::<String>("tg-api-key")
+        .map(|s| s.clone())
+        .unwrap();
+    let tg_chat_id = args
+        .get_one::<String>("tg-chat-id")
+        .map(|s| s.clone())
+        .clone()
+        .unwrap();
     let metrics_port = args.get_one::<u16>("metrics-port").copied().unwrap();
-    let metrics_addr: String = args.get_one::<String>("metrics-addr").unwrap().to_string();
+    let metrics_addr = args.get_one::<String>("metrics-addr").unwrap().to_string();
     let info_url = args.get_one::<String>("info-url").unwrap().to_string();
 
     info!("===================");
@@ -29,8 +36,8 @@ pub async fn start(args: &ArgMatches) -> anyhow::Result<()> {
             metrics_addr,
             metrics_port,
             info_url,
-            tg_api_key.unwrap_or("").to_string(),
-            tg_chat_id.unwrap_or("").to_string(),
+            tg_api_key.to_string(),
+            tg_chat_id.to_string(),
         )
         .await
         {
