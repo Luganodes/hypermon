@@ -36,6 +36,12 @@ Flags:
 | `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics |
 
 ## Metrics Served
+With default flags, the following will be shown after
+```bash
+curl localhost:6969/metrics
+```
+
+Output format:
 ```
 # The validator's recent blocks
 hyperliquid_validator_recent_blocks{address="val address"}
