@@ -72,3 +72,4 @@ hyperliquid_request_time
 - [x] Fix `--only-*` flags
 - [ ] Show valuable info from the data directory
 - [ ] Add a TUI dashboard to view the network info for all validators
+- [ ] When making requests to EVM, parallelize the requests
