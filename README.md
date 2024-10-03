@@ -60,8 +60,9 @@ hyperliquid_request_time
 ```
 
 ## Todo
-- [ ] Add support for telegram notifications
+- [x] Add support for telegram notifications
 - [ ] Pull valuable/necessary info from EVM RPC if it is provided
 - [ ] Create setup script for easy download and systemd service setup
-- [ ] Fix `--only-*` flags
+- [x] Fix `--only-*` flags
 - [ ] Show valuable info from the data directory
+- [ ] Add a TUI dashboard to view the network info for all validators
