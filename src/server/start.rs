@@ -201,25 +201,25 @@ async fn get_metrics(
         }
     }
 
-    let last_total_active_stake = TOTAL_ACTIVE_STAKE.get();
-    if last_total_active_stake != total_active_stake {
-        _ = sender
-            .send_message(format!(
-                "🥩 Total *active* network stake has changed to {}\\!",
-                total_active_stake
-            ))
-            .await;
-    }
+    // let last_total_active_stake = TOTAL_ACTIVE_STAKE.get();
+    // if last_total_active_stake != total_active_stake {
+    //     _ = sender
+    //         .send_message(format!(
+    //             "🥩 Total *active* network stake has changed to {}\\!",
+    //             total_active_stake
+    //         ))
+    //         .await;
+    // }
 
-    let last_total_jailed_stake = TOTAL_JAILED_STAKE.get();
-    if last_total_jailed_stake != total_jailed_stake {
-        _ = sender
-            .send_message(format!(
-                "🥩 Total *jailed* network stake has changed to {}\\!",
-                total_jailed_stake
-            ))
-            .await;
-    }
+    // let last_total_jailed_stake = TOTAL_JAILED_STAKE.get();
+    // if last_total_jailed_stake != total_jailed_stake {
+    //     _ = sender
+    //         .send_message(format!(
+    //             "🥩 Total *jailed* network stake has changed to {}\\!",
+    //             total_jailed_stake
+    //         ))
+    //         .await;
+    // }
 
     let total_vals = validators.len() as f64;
     if !TOTAL_VALIDATORS.get().eq(&total_vals) {
