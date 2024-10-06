@@ -10,7 +10,7 @@ Hypermon can:
 ## Installation
 Run the following to install `hypermon` on your system:
 ```bash
-curl https://raw.githubusercontent.com/Luganodes/hypermon/main/install.sh | bash
+curl https://raw.githubusercontent.com/Luganodes/hypermon/main/install.sh | sudo bash
 ```
 
 ## Commands and Flags
