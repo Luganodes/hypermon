@@ -33,7 +33,18 @@ Flags:
 | `--tg-chat-id` | NONE | If `--only-telegram` is set, this is the TG channel's ID |
 | `--metrics-port` | 6969 | The port on which the metrics server should serve metrics |
 | `--metrics-addr` | 0.0.0.0 | The address on which the metrics server should serve metrics |
-| `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics |
+| `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics. |
+
+### `show`
+To show the network stats as a table
+```bash
+hypermon show
+```
+Flags:
+| Name | Default | Description |
+| ----------- | ----------- | ----------- |
+| `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics. |
+| `--filter-address` | 0x1ab189b7801140900c711e458212f9c76f8dac79 | The address to highlight as green when showing the network ingo |
 
 ## Metrics Served
 With default flags, the following will be shown after
@@ -68,9 +79,10 @@ hyperliquid_request_time
 ## Todo
 - [x] Add support for telegram notifications
 - [x] Add a TUI dashboard to view the network info for all validators
-- [x] Fix `--only-*` flags
+- [x] Create setup script for easy download and systemd service setup
+- [ ] Fix `--only-*` flags
 - [ ] Pull valuable/necessary info from EVM RPC if it is provided
-- [ ] Create setup script for easy download and systemd service setup
 - [ ] Show valuable info from the data directory
 - [ ] When making requests to EVM, parallelize the requests
 - [ ] Add a metric to show version of the node binary
+- [ ] Add a metric to show the info-url and evm rpc url being used
