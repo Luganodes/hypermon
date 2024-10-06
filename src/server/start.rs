@@ -7,15 +7,12 @@ use actix_web::{
 use anyhow::Context;
 use lazy_static::lazy_static;
 use prometheus::{opts, Encoder, Gauge, GaugeVec, Registry, TextEncoder};
-use reqwest::{
-    header::{HeaderMap, HeaderValue, CONTENT_TYPE},
-    Client, ClientBuilder,
-};
-use tracing::{error, info};
+use reqwest::Client;
+use tracing::info;
 
 use crate::{
-    helpers::Sender,
-    types::{HypermonError, Query, Validator},
+    helpers::{get_network_validators, get_request_client, Sender},
+    types::HypermonError,
 };
 
 lazy_static! {
@@ -67,16 +64,7 @@ pub async fn start(
     token: String,
     chat_id: String,
 ) -> Result<Server, HypermonError> {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        CONTENT_TYPE,
-        HeaderValue::from_str("application/json").expect("hello ser, json pls"),
-    );
-
-    let client = ClientBuilder::new()
-        .default_headers(headers)
-        .build()
-        .expect("Couldn't get client");
+    let client = get_request_client();
 
     REGISTRY
         .register(Box::new(RECENT_BLOCKS.clone()))
@@ -135,28 +123,10 @@ async fn get_metrics(
 ) -> Result<HttpResponse, HypermonError> {
     info!("Request to: {}", req.head().uri);
 
-    let validators = client
-        .post(info_url.clone().into_inner().to_string())
-        .json(&Query {
-            t: "validatorSummaries".to_string(),
-        })
-        .send()
-        .await
-        .context(format!(
-            "Error with the response from: {}",
-            info_url.into_inner()
-        ))
-        .map_err(|e| HypermonError::ResponseError(e))?
-        .json::<Vec<Validator>>()
-        .await
-        .context("Error while deserializing Validator summaries")
-        .map_err(|e| {
-            error!("{e:?}");
-            HypermonError::DeserializationError(e)
-        })?;
-
     let mut total_active_stake: f64 = 0.0;
     let mut total_jailed_stake: f64 = 0.0;
+
+    let validators = get_network_validators(&client, info_url.into_inner().to_string()).await?;
 
     for validator in validators.iter() {
         let addr = validator.validator.as_str();

@@ -1,5 +1,6 @@
 use clap::{value_parser, Arg, Command};
-use hypermon::commands::start;
+use hypermon::commands::{show, start};
+use tracing::error;
 
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
@@ -61,13 +62,34 @@ async fn main() -> color_eyre::Result<()> {
                         .default_value("https://api.hyperliquid-testnet.xyz/info"),
                 ]),
         )
+        .subcommand(
+            Command::new("show")
+                .about("Show the network's validators state")
+                .arg_required_else_help(false)
+                .args([
+                    Arg::new("info-url")
+                        .help("The info url")
+                        .long("info-url")
+                        .default_value("https://api.hyperliquid-testnet.xyz/info"),
+                    Arg::new("filter-address")
+                        .help("Show all information for only the validator address given")
+                        .long("filter-address")
+                        .default_value("0x1ab189b7801140900c711e458212f9c76f8dac79")
+                ]),
+        )
         .get_matches();
 
-    match matches.subcommand() {
-        Some(("start", sub_m)) => {
-            let _ = start(sub_m).await;
-        }
+    let res = match matches.subcommand() {
+        Some(("start", sub_m)) => start(sub_m).await,
+        Some(("show", sub_m)) => show(sub_m).await,
         None | Some(_) => unreachable!(),
+    };
+
+    match res {
+        Ok(_) => {}
+        Err(err) => {
+            error!("Error: {err:?}");
+        }
     }
 
     Ok(())

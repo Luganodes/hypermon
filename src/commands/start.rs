@@ -1,9 +1,9 @@
 use clap::ArgMatches;
 use tracing::{error, info};
 
-use crate::server;
+use crate::{server, types::HypermonError};
 
-pub async fn start(args: &ArgMatches) -> anyhow::Result<()> {
+pub async fn start(args: &ArgMatches) -> Result<(), HypermonError> {
     let only_metrics = args.get_one::<bool>("only-metrics").copied().unwrap();
     let only_telegram = args.get_one::<bool>("only-telegram").copied().unwrap();
     let tg_api_key = args
