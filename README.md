@@ -73,3 +73,4 @@ hyperliquid_request_time
 - [ ] Show valuable info from the data directory
 - [ ] Add a TUI dashboard to view the network info for all validators
 - [ ] When making requests to EVM, parallelize the requests
+- [ ] Add a metric to show version of the node binary
