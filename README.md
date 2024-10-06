@@ -22,12 +22,12 @@ hypermon start
 Flags:
 | Name | Default | Description |
 | ----------- | ----------- | ----------- |
-| `--only-telegram` | false | Only start the telegram notifications |
-| `--only-metrics` | false | Only start the metrics server |
-| `--tg-api-key` | NONE | If `--only-telegram` is set, this is the TG bot's API key |
-| `--tg-chat-id` | NONE | If `--only-telegram` is set, this is the TG channel's ID |
-| `--metrics-port` | 6969 | The port on which the metrics server should serve metrics |
-| `--metrics-addr` | 0.0.0.0 | The address on which the metrics server should serve metrics |
+| `--only-telegram` | false | Only start the telegram notifications. |
+| `--only-metrics` | false | Only start the metrics server. |
+| `--tg-api-key` | NONE | If `--only-telegram` is set, this is the TG bot's API key. |
+| `--tg-chat-id` | NONE | If `--only-telegram` is set, this is the TG channel's ID. |
+| `--metrics-port` | 6969 | The port on which the metrics server should serve metrics. |
+| `--metrics-addr` | 0.0.0.0 | The address on which the metrics server should serve metrics. |
 | `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics. |
 
 ### `show`
@@ -39,7 +39,7 @@ Flags:
 | Name | Default | Description |
 | ----------- | ----------- | ----------- |
 | `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics. |
-| `--filter-address` | 0x1ab189b7801140900c711e458212f9c76f8dac79 | The address to highlight as green when showing the network ingo |
+| `--filter-address` | 0x1ab189b7801140900c711e458212f9c76f8dac79 | The address to highlight as green when showing the network info. |
 
 ## Metrics Served
 With default flags, the following will be shown after
