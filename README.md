@@ -8,14 +8,9 @@ Hypermon can:
 - Send alerts to your Telegram group (Check TODOs at the bottom)
 
 ## Installation
-Checkout [releases](https://github.com/Luganodes/hypermon/releases) or build it yourself:
+Run the following to install `hypermon` on your system:
 ```bash
-# Setup your rust environment
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-git clone https://github.com/Luganodes/hypermon.git
-cd hypermon
-cargo build --release
+curl https://raw.githubusercontent.com/Luganodes/hypermon/main/install.sh | bash
 ```
 
 ## Commands and Flags
