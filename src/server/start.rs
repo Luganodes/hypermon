@@ -11,7 +11,7 @@ use reqwest::Client;
 use tracing::info;
 
 use crate::{
-    helpers::{get_network_validators, get_request_client, Sender},
+    helpers::{escape_for_telegram_markdown_v2, get_network_validators, get_request_client, Sender},
     types::HypermonError,
 };
 
@@ -132,25 +132,26 @@ async fn get_metrics(
         let addr = validator.validator.as_str();
         let is_jailed = if validator.is_jailed { 1.0 } else { 0.0 };
         let stake = validator.stake as f64;
-        let name = validator.name.clone();
+        let name = escape_for_telegram_markdown_v2(&validator.name.clone());
 
-        if !IS_JAILED.with_label_values(&[addr]).get().eq(&is_jailed) {
+        let last_jailed = IS_JAILED.with_label_values(&[addr]).get();
+        if !last_jailed.eq(&is_jailed) {
             if is_jailed == 1.0 {
                 _ = sender
-                    .send_message(format!("🚨 __{}__ is now *jailed\\!*", name))
+                    .send_message(format!("🚨 *{}* is now __jailed__\\!", name))
                     .await;
             } else {
                 _ = sender
-                    .send_message(format!("✅ __{}__ is now unjailed\\!", name))
+                    .send_message(format!("✅ *{}* is now __unjailed__\\!", name))
                     .await;
             }
         }
 
         let last_stake = STAKE.with_label_values(&[addr]).get();
-        if !STAKE.with_label_values(&[addr]).get().eq(&stake) {
+        if !last_stake.eq(&stake) && last_stake != 0.0 {
             _ = sender
                 .send_message(format!(
-                    "__{}__ stake changed by __{}__ to *{}*\\!",
+                    "🥩 *{}* stake changed by __{}__ to *{}*\\!",
                     name,
                     (stake - last_stake).to_string().replace(".", "\\."),
                     stake.to_string().replace(".", "\\.")
@@ -170,26 +171,6 @@ async fn get_metrics(
             total_jailed_stake += validator.stake as f64;
         }
     }
-
-    // let last_total_active_stake = TOTAL_ACTIVE_STAKE.get();
-    // if last_total_active_stake != total_active_stake {
-    //     _ = sender
-    //         .send_message(format!(
-    //             "🥩 Total *active* network stake has changed to {}\\!",
-    //             total_active_stake
-    //         ))
-    //         .await;
-    // }
-
-    // let last_total_jailed_stake = TOTAL_JAILED_STAKE.get();
-    // if last_total_jailed_stake != total_jailed_stake {
-    //     _ = sender
-    //         .send_message(format!(
-    //             "🥩 Total *jailed* network stake has changed to {}\\!",
-    //             total_jailed_stake
-    //         ))
-    //         .await;
-    // }
 
     let total_vals = validators.len() as f64;
     if !TOTAL_VALIDATORS.get().eq(&total_vals) {
