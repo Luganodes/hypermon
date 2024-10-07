@@ -5,7 +5,7 @@ The minimal all in one tool to monitor your Hyperliquid validator. Built by indu
 
 Hypermon can:
 - Expose metrics for Prometheus
-- Send alerts to your Telegram group (Check TODOs at the bottom)
+- Send alerts to your Telegram group
 
 ## Installation
 Run the following to install `hypermon` on your system:
