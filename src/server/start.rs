@@ -134,12 +134,6 @@ async fn get_metrics(
         let stake = validator.stake as f64;
         let name = validator.name.clone();
 
-        RECENT_BLOCKS
-            .with_label_values(&[addr])
-            .set(validator.n_recent_blocks as f64);
-        IS_JAILED.with_label_values(&[addr]).set(is_jailed);
-        STAKE.with_label_values(&[addr]).set(validator.stake as f64);
-
         if !IS_JAILED.with_label_values(&[addr]).get().eq(&is_jailed) {
             if is_jailed == 1.0 {
                 _ = sender
@@ -163,6 +157,12 @@ async fn get_metrics(
                 ))
                 .await;
         }
+
+        RECENT_BLOCKS
+            .with_label_values(&[addr])
+            .set(validator.n_recent_blocks as f64);
+        IS_JAILED.with_label_values(&[addr]).set(is_jailed);
+        STAKE.with_label_values(&[addr]).set(validator.stake as f64);
 
         if !validator.is_jailed {
             total_active_stake += validator.stake as f64;

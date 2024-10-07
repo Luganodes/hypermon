@@ -18,7 +18,7 @@ async fn main() -> color_eyre::Result<()> {
     let matches = Command::new("hypermon")
         .about("Minimal, all-in-one Hyperliquid Validator Metrics Exporter")
         .author("Suryansh @ Luganodes")
-        .version("0.1.0")
+        .version("0.2.0")
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(
