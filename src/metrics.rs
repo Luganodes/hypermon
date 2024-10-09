@@ -1,7 +1,11 @@
+use actix_web::web::Data;
 use anyhow::Context;
 use prometheus::{opts, Encoder, Gauge, GaugeVec, Registry, TextEncoder};
 
-use crate::types::HypermonError;
+use crate::{
+    helpers::{escape_for_telegram_markdown_v2, Sender},
+    types::{HypermonError, Validator},
+};
 
 #[derive(Debug, Clone)]
 pub struct Metrics {
@@ -103,5 +107,76 @@ impl Metrics {
             .map_err(|e| HypermonError::EncodeError(e.into()))?;
 
         Ok((encoder, buffer))
+    }
+
+    pub async fn update_for_validators(
+        &self,
+        validators: Vec<Validator>,
+        sender: Data<Sender>,
+    ) -> Result<(), HypermonError> {
+        let mut total_active_stake: f64 = 0.0;
+        let mut total_jailed_stake: f64 = 0.0;
+
+        for validator in validators.iter() {
+            let addr = validator.validator.as_str();
+            let is_jailed = if validator.is_jailed { 1.0 } else { 0.0 };
+            let stake = validator.stake as f64;
+            let name = escape_for_telegram_markdown_v2(&validator.name.clone());
+
+            let last_jailed = self.is_jailed.with_label_values(&[addr]).get();
+            if !last_jailed.eq(&is_jailed) {
+                if is_jailed == 1.0 {
+                    _ = sender
+                        .send_message(format!("🚨 *{}* is now __jailed__\\!", name))
+                        .await;
+                } else {
+                    _ = sender
+                        .send_message(format!("✅ *{}* is now __unjailed__\\!", name))
+                        .await;
+                }
+            }
+
+            let last_stake = self.stake.with_label_values(&[addr]).get();
+            if !last_stake.eq(&stake) && last_stake != 0.0 {
+                _ = sender
+                    .send_message(format!(
+                        "🥩 *{}* stake changed by __{}__ to *{}*\\!",
+                        name,
+                        (stake - last_stake).to_string().replace(".", "\\."),
+                        stake.to_string().replace(".", "\\.")
+                    ))
+                    .await;
+            }
+
+            self.recent_blocks
+                .with_label_values(&[addr])
+                .set(validator.n_recent_blocks as f64);
+            self.is_jailed.with_label_values(&[addr]).set(is_jailed);
+            self.stake
+                .with_label_values(&[addr])
+                .set(validator.stake as f64);
+
+            if !validator.is_jailed {
+                total_active_stake += validator.stake as f64;
+            } else {
+                total_jailed_stake += validator.stake as f64;
+            }
+        }
+
+        let total_vals = validators.len() as f64;
+        if !self.total_validators.get().eq(&total_vals) {
+            _ = sender
+                .send_message(format!(
+                    "\\#️⃣ Total validators on the network: __{}__\\!",
+                    total_vals
+                ))
+                .await;
+        }
+
+        self.total_active_stake.set(total_active_stake);
+        self.total_jailed_stake.set(total_jailed_stake);
+        self.total_validators.set(total_vals);
+
+        Ok(())
     }
 }

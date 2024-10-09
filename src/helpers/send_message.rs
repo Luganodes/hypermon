@@ -1,6 +1,6 @@
 use reqwest::Client;
 use serde::Serialize;
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 #[derive(Serialize)]
 struct SendMessageParams {
@@ -18,6 +18,11 @@ pub struct Sender {
 impl Sender {
     pub async fn send_message(&self, message: String) -> anyhow::Result<()> {
         if self.token.len() == 0 || self.chat_id.len() == 0 {
+            debug!(
+                token = self.token,
+                chat_id = self.chat_id,
+                "Either 'tg-api-key' or 'tg-chat-id' not provided..."
+            );
             return Ok(());
         }
 
