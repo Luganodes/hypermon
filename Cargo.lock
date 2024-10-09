@@ -953,7 +953,6 @@ dependencies = [
  "anyhow",
  "clap",
  "color-eyre",
- "lazy_static",
  "prettytable",
  "prometheus",
  "reqwest",

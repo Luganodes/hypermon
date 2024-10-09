@@ -18,6 +18,7 @@ pub async fn start(
     listen_addr: String,
     port: u16,
     info_url: String,
+    rpc_url: String,
     token: String,
     chat_id: String,
 ) -> Result<Server, HypermonError> {

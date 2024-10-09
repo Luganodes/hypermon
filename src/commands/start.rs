@@ -18,6 +18,7 @@ pub async fn start(args: &ArgMatches) -> Result<(), HypermonError> {
     let metrics_port = args.get_one::<u16>("metrics-port").copied().unwrap();
     let metrics_addr = args.get_one::<String>("metrics-addr").unwrap().to_string();
     let info_url = args.get_one::<String>("info-url").unwrap().to_string();
+    let rpc_url = args.get_one::<String>("rpc").unwrap().to_string();
 
     info!("===================");
     info!("Args found: ");
@@ -28,6 +29,7 @@ pub async fn start(args: &ArgMatches) -> Result<(), HypermonError> {
     info!("--metrics-port: {}", metrics_port);
     info!("--metrics-addr: {}", metrics_addr);
     info!("--info-url: {}", info_url);
+    info!("--rpc-url: {}", rpc_url);
     info!("===================");
 
     // Start the prometheus server
@@ -36,6 +38,7 @@ pub async fn start(args: &ArgMatches) -> Result<(), HypermonError> {
             metrics_addr,
             metrics_port,
             info_url,
+            rpc_url,
             tg_api_key.to_string(),
             tg_chat_id.to_string(),
         )

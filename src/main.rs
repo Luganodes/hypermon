@@ -62,7 +62,12 @@ async fn main() -> color_eyre::Result<()> {
                         .default_value("0.0.0.0"),
                     Arg::new("info-url")
                         .long("info-url")
+                        .help("A Hyperliquid info url. Can be different for testnet and mainnet.")
                         .default_value("https://api.hyperliquid-testnet.xyz/info"),
+                    Arg::new("rpc")
+                        .long("rpc")
+                        .help("A Hyperliquid EVM JSON RPC URL")
+                        .required(true),
                 ]),
         )
         .subcommand(
