@@ -4,58 +4,17 @@ use actix_web::{
     web::{self, Data},
     App, HttpRequest, HttpResponse, HttpResponseBuilder, HttpServer,
 };
-use anyhow::Context;
-use lazy_static::lazy_static;
-use prometheus::{opts, Encoder, Gauge, GaugeVec, Registry, TextEncoder};
+use prometheus::Encoder;
 use reqwest::Client;
 use tracing::info;
 
 use crate::{
-    helpers::{escape_for_telegram_markdown_v2, get_network_validators, get_request_client, Sender},
+    helpers::{
+        escape_for_telegram_markdown_v2, get_network_validators, get_request_client, Sender,
+    },
     types::HypermonError,
+    Metrics,
 };
-
-lazy_static! {
-    static ref RECENT_BLOCKS: GaugeVec = GaugeVec::new(
-        opts!(
-            "hyperliquid_validator_recent_blocks",
-            "Recent blocks produced"
-        ),
-        &["address"]
-    )
-    .unwrap();
-    static ref IS_JAILED: GaugeVec = GaugeVec::new(
-        opts!("hyperliquid_validator_is_jailed", "Is a validator jailed?"),
-        &["address"]
-    )
-    .unwrap();
-    static ref STAKE: GaugeVec = GaugeVec::new(
-        opts!("hyperliquid_validator_stake", "Stake of a validator"),
-        &["address"]
-    )
-    .unwrap();
-    static ref TOTAL_ACTIVE_STAKE: Gauge = Gauge::new(
-        "hyperliquid_network_total_active_stake",
-        "Active stake of the whole network"
-    )
-    .unwrap();
-    static ref TOTAL_JAILED_STAKE: Gauge = Gauge::new(
-        "hyperliquid_network_total_jailed_stake",
-        "Jailed stake of the whole network"
-    )
-    .unwrap();
-    static ref TOTAL_VALIDATORS: Gauge = Gauge::new(
-        "hyperliquid_network_total_validators",
-        "Total amount of validators on the network"
-    )
-    .unwrap();
-    static ref REQUEST_TIME: Gauge = Gauge::new(
-        "hyperliquid_request_time",
-        "The time it takes to get a response from the info endpoint"
-    )
-    .unwrap();
-    static ref REGISTRY: Registry = Registry::new();
-}
 
 pub async fn start(
     listen_addr: String,
@@ -64,36 +23,10 @@ pub async fn start(
     token: String,
     chat_id: String,
 ) -> Result<Server, HypermonError> {
-    let client = get_request_client();
+    let metrics = Metrics::new();
+    metrics.register()?;
 
-    REGISTRY
-        .register(Box::new(RECENT_BLOCKS.clone()))
-        .context("Couldn't register recent_blocks")
-        .map_err(|e| HypermonError::RegisterError(e.into()))?;
-    REGISTRY
-        .register(Box::new(IS_JAILED.clone()))
-        .context("Couldn't register is_jailed")
-        .map_err(|e| HypermonError::RegisterError(e.into()))?;
-    REGISTRY
-        .register(Box::new(STAKE.clone()))
-        .context("Couldn't register stake")
-        .map_err(|e| HypermonError::RegisterError(e.into()))?;
-    REGISTRY
-        .register(Box::new(TOTAL_ACTIVE_STAKE.clone()))
-        .context("Couldn't register total_active_stake")
-        .map_err(|e| HypermonError::RegisterError(e.into()))?;
-    REGISTRY
-        .register(Box::new(TOTAL_JAILED_STAKE.clone()))
-        .context("Couldn't register total_active_stake")
-        .map_err(|e| HypermonError::RegisterError(e.into()))?;
-    REGISTRY
-        .register(Box::new(TOTAL_VALIDATORS.clone()))
-        .context("Couldn't register total_validators")
-        .map_err(|e| HypermonError::RegisterError(e.into()))?;
-    REGISTRY
-        .register(Box::new(REQUEST_TIME.clone()))
-        .context("Couldn't register request_time")
-        .map_err(|e| HypermonError::RegisterError(e.into()))?;
+    let client = get_request_client();
 
     let sender = Sender { token, chat_id };
 
@@ -108,6 +41,7 @@ pub async fn start(
             .app_data(web::Data::new(client.clone()))
             .app_data(web::Data::new(info_url.clone()))
             .app_data(web::Data::new(sender.clone()))
+            .app_data(web::Data::new(metrics.clone()))
     })
     .bind((listen_addr, port))?
     .run();
@@ -120,6 +54,7 @@ async fn get_metrics(
     client: Data<Client>,
     info_url: Data<String>,
     sender: Data<Sender>,
+    metrics: Data<Metrics>,
 ) -> Result<HttpResponse, HypermonError> {
     info!("Request to: {}", req.head().uri);
 
@@ -134,7 +69,7 @@ async fn get_metrics(
         let stake = validator.stake as f64;
         let name = escape_for_telegram_markdown_v2(&validator.name.clone());
 
-        let last_jailed = IS_JAILED.with_label_values(&[addr]).get();
+        let last_jailed = metrics.is_jailed.with_label_values(&[addr]).get();
         if !last_jailed.eq(&is_jailed) {
             if is_jailed == 1.0 {
                 _ = sender
@@ -147,7 +82,7 @@ async fn get_metrics(
             }
         }
 
-        let last_stake = STAKE.with_label_values(&[addr]).get();
+        let last_stake = metrics.stake.with_label_values(&[addr]).get();
         if !last_stake.eq(&stake) && last_stake != 0.0 {
             _ = sender
                 .send_message(format!(
@@ -159,11 +94,15 @@ async fn get_metrics(
                 .await;
         }
 
-        RECENT_BLOCKS
+        metrics
+            .recent_blocks
             .with_label_values(&[addr])
             .set(validator.n_recent_blocks as f64);
-        IS_JAILED.with_label_values(&[addr]).set(is_jailed);
-        STAKE.with_label_values(&[addr]).set(validator.stake as f64);
+        metrics.is_jailed.with_label_values(&[addr]).set(is_jailed);
+        metrics
+            .stake
+            .with_label_values(&[addr])
+            .set(validator.stake as f64);
 
         if !validator.is_jailed {
             total_active_stake += validator.stake as f64;
@@ -173,7 +112,7 @@ async fn get_metrics(
     }
 
     let total_vals = validators.len() as f64;
-    if !TOTAL_VALIDATORS.get().eq(&total_vals) {
+    if !metrics.total_validators.get().eq(&total_vals) {
         _ = sender
             .send_message(format!(
                 "\\#️⃣ Total validators on the network: __{}__\\!",
@@ -182,18 +121,11 @@ async fn get_metrics(
             .await;
     }
 
-    TOTAL_ACTIVE_STAKE.set(total_active_stake);
-    TOTAL_JAILED_STAKE.set(total_jailed_stake);
-    TOTAL_VALIDATORS.set(total_vals);
+    metrics.total_active_stake.set(total_active_stake);
+    metrics.total_jailed_stake.set(total_jailed_stake);
+    metrics.total_validators.set(total_vals);
 
-    let encoder = TextEncoder::new();
-
-    let metric_families = REGISTRY.gather();
-    let mut buffer = vec![];
-    encoder
-        .encode(&metric_families, &mut buffer)
-        .context("Couldn't encode metric families")
-        .map_err(|e| HypermonError::EncodeError(e.into()))?;
+    let (encoder, buffer) = metrics.get_encoder_and_buffer()?;
 
     Ok(HttpResponseBuilder::new(StatusCode::OK)
         .insert_header(("Content-Type", encoder.format_type()))

@@ -1,4 +1,8 @@
 pub mod commands;
-pub mod types;
-pub mod server;
 pub mod helpers;
+pub mod server;
+pub mod types;
+
+mod metrics;
+
+pub use metrics::*;

@@ -15,10 +15,13 @@ async fn main() -> color_eyre::Result<()> {
 
     tracing::subscriber::set_global_default(subscriber)?;
 
+    // Comes from the build script
+    let version_str = include_str!(concat!(env!("OUT_DIR"), "/version_file"));
+
     let matches = Command::new("hypermon")
         .about("Minimal, all-in-one Hyperliquid Validator Metrics Exporter")
         .author("Suryansh @ Luganodes")
-        .version("0.2.0")
+        .version(version_str)
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(
@@ -74,7 +77,7 @@ async fn main() -> color_eyre::Result<()> {
                     Arg::new("filter-address")
                         .help("Show all information for only the validator address given")
                         .long("filter-address")
-                        .default_value("0x1ab189b7801140900c711e458212f9c76f8dac79")
+                        .default_value("0x1ab189b7801140900c711e458212f9c76f8dac79"),
                 ]),
         )
         .get_matches();
