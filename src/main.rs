@@ -3,9 +3,7 @@ use hypermon::commands::{show, start};
 use tracing::error;
 
 #[tokio::main]
-async fn main() -> color_eyre::Result<()> {
-    color_eyre::install()?;
-
+async fn main() -> anyhow::Result<()> {
     let subscriber = tracing_subscriber::fmt()
         .with_line_number(true)
         .with_target(true)
@@ -64,8 +62,8 @@ async fn main() -> color_eyre::Result<()> {
                         .long("info-url")
                         .help("A Hyperliquid info url. Can be different for testnet and mainnet.")
                         .default_value("https://api.hyperliquid-testnet.xyz/info"),
-                    Arg::new("rpc")
-                        .long("rpc")
+                    Arg::new("rpc-url")
+                        .long("rpc-url")
                         .help("A Hyperliquid EVM JSON RPC URL")
                         .required(true),
                 ]),

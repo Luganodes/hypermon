@@ -9,7 +9,6 @@ build = "build.rs"
 [dependencies]
 clap = "4.5.18"
 anyhow = "1.0.86"
-color-eyre = "0.6"
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 reqwest = { version = "0.12.7", features = ["json"] }
@@ -20,3 +19,4 @@ actix-web = "4.9.0"
 thiserror = "1.0.63"
 prometheus = "0.13.4"
 prettytable = "0.10.0"
+web3 = "0.19.0"

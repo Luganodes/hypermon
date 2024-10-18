@@ -29,6 +29,7 @@ Flags:
 | `--metrics-port` | 6969 | The port on which the metrics server should serve metrics. |
 | `--metrics-addr` | 0.0.0.0 | The address on which the metrics server should serve metrics. |
 | `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics. |
+| `--rpc-url` | https://api.hyperliquid-testnet.xyz/evm | The RPC URL to scrape metrics from. Change this to scrape Mainnet metrics. |
 
 ### `show`
 To show the network stats as a table
@@ -69,15 +70,27 @@ hyperliquid_network_total_validators
 
 # The time it takes to make a request to the Info endpoint
 hyperliquid_request_time 
+
+# The current block on the RPC
+hyperliquid_rpc_current_block
+
+# Is the RPC syncing?
+hyperliquid_rpc_is_syncing
+
+# The Info URL being used
+hyperliquid_info_url
+
+# The RPC URL being used
+hyperliquid_rpc_url
 ```
 
 ## Todo
 - [x] Add support for telegram notifications
 - [x] Add a TUI dashboard to view the network info for all validators
 - [x] Create setup script for easy download and systemd service setup
+- [x] Add a metric to show the info-url and evm rpc url being used
+- [x] Pull valuable/necessary info from EVM RPC if it is provided
 - [ ] Fix `--only-*` flags
-- [ ] Pull valuable/necessary info from EVM RPC if it is provided
 - [ ] Show valuable info from the data directory
-- [ ] When making requests to EVM, parallelize the requests
 - [ ] Add a metric to show version of the node binary
-- [ ] Add a metric to show the info-url and evm rpc url being used
+- [ ] Add the ability to issue an unjail whenever the validator is jailed

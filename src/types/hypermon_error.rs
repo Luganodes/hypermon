@@ -19,6 +19,12 @@ pub enum HypermonError {
 
     #[error("IO Error: {0}")]
     IOError(#[from] std::io::Error),
+    
+    #[error("RPC Client Error: {0}")]
+    RpcClientError(#[source] anyhow::Error),
+
+    #[error("Couldn't unwrap SyncInfo")]
+    UnableToUnwrapSyncInfo,
 }
 
 impl ResponseError for HypermonError {
@@ -30,6 +36,8 @@ impl ResponseError for HypermonError {
             HypermonError::RegisterError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             HypermonError::EncodeError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             HypermonError::IOError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            HypermonError::RpcClientError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            HypermonError::UnableToUnwrapSyncInfo => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
