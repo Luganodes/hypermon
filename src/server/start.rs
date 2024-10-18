@@ -10,6 +10,7 @@ use tracing::info;
 
 use crate::{
     helpers::{get_network_validators, get_request_client, Sender},
+    rpc::RpcClient,
     types::HypermonError,
     Metrics,
 };
@@ -26,6 +27,7 @@ pub async fn start(
     metrics.register()?;
 
     let client = get_request_client();
+    let rpc_client = RpcClient::new(rpc_url)?;
 
     // If token and chat_id are not provided the sender won't be able to send anyway
     let sender = Sender { token, chat_id };
@@ -41,6 +43,7 @@ pub async fn start(
             .route("/", web::get().to(health_check))
             .route("/metrics", web::get().to(get_metrics))
             .app_data(web::Data::new(client.clone()))
+            .app_data(web::Data::new(rpc_client.clone()))
             .app_data(web::Data::new(info_url.clone()))
             .app_data(web::Data::new(sender.clone()))
             .app_data(web::Data::new(metrics.clone()))
@@ -54,17 +57,26 @@ pub async fn start(
 async fn get_metrics(
     req: HttpRequest,
     client: Data<Client>,
+    rpc_client: Data<RpcClient>,
     info_url: Data<String>,
     sender: Data<Sender>,
     metrics: Data<Metrics>,
 ) -> Result<HttpResponse, HypermonError> {
     info!("Request to: {}", req.head().uri);
 
-    let validators = get_network_validators(&client, info_url.into_inner().to_string()).await?;
+    let rpc_url = rpc_client.rpc_url.clone();
+    let validators =
+        get_network_validators(&client, info_url.clone().into_inner().to_string()).await?;
 
     metrics.update_for_validators(validators, sender).await?;
+    metrics.update_for_rpc(&rpc_client.into_inner()).await?;
 
-    let (encoder, buffer) = metrics.get_encoder_and_buffer()?;
+    let (encoder, mut buffer) = metrics.get_encoder_and_buffer()?;
+    let info_url_metric = format!("# HELP hyperliquid_info_url The Hyperliquid Info URL being used\n# TYPE hyperliquid_info_url gauge\nhyperliquid_info_url '{}'", info_url.to_string()).as_bytes().to_vec();
+    let rpc_url_metric = format!("\n# HELP hyperliquid_rpc_url The Hyperliquid RPC URL being used\n# TYPE hyperliquid_rpc_url gauge\nhyperliquid_rpc_url '{}'\n", rpc_url).as_bytes().to_vec();
+
+    buffer.extend(&info_url_metric);
+    buffer.extend(&rpc_url_metric);
 
     Ok(HttpResponseBuilder::new(StatusCode::OK)
         .insert_header(("Content-Type", encoder.format_type()))

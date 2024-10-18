@@ -1,9 +1,11 @@
 use actix_web::web::Data;
 use anyhow::Context;
-use prometheus::{opts, Encoder, Gauge, GaugeVec, Registry, TextEncoder};
+use prometheus::{opts, Encoder, Gauge, GaugeVec, IntGauge, Registry, TextEncoder};
+use tracing::{debug, error};
 
 use crate::{
     helpers::{escape_for_telegram_markdown_v2, Sender},
+    rpc::RpcClient,
     types::{HypermonError, Validator},
 };
 
@@ -16,6 +18,8 @@ pub struct Metrics {
     pub total_jailed_stake: Gauge,
     pub total_validators: Gauge,
     pub request_time: Gauge,
+    pub is_syncing: IntGauge,
+    pub rpc_current_block: Gauge,
     registry: Registry,
 }
 
@@ -60,6 +64,12 @@ impl Metrics {
                 "The time it takes to get a response from the info endpoint",
             )
             .unwrap(),
+            is_syncing: IntGauge::new("hyperliquid_rpc_is_syncing", "Is the RPC syncing?").unwrap(),
+            rpc_current_block: Gauge::new(
+                "hyperliquid_rpc_current_block",
+                "The latest block from the RPC",
+            )
+            .unwrap(),
             registry: Registry::new(),
         }
     }
@@ -93,6 +103,14 @@ impl Metrics {
             .register(Box::new(self.request_time.clone()))
             .context("Couldn't register request_time")
             .map_err(|e| HypermonError::RegisterError(e.into()))?;
+        self.registry
+            .register(Box::new(self.is_syncing.clone()))
+            .context("Couldn't register is_syncing")
+            .map_err(|e| HypermonError::RegisterError(e.into()))?;
+        self.registry
+            .register(Box::new(self.rpc_current_block.clone()))
+            .context("Couldn't register rpc_current_block")
+            .map_err(|e| HypermonError::RegisterError(e.into()))?;
         Ok(())
     }
 
@@ -107,6 +125,38 @@ impl Metrics {
             .map_err(|e| HypermonError::EncodeError(e.into()))?;
 
         Ok((encoder, buffer))
+    }
+
+    pub async fn update_for_rpc(&self, rpc_client: &RpcClient) -> Result<(), HypermonError> {
+        debug!("Updating metrics for RPC");
+
+        // If the RPC starts malfunctioning, syncing should go to false
+        // the rest should just stop updating but not error out
+        let mut is_syncing = true;
+        match rpc_client.syncing_info().await {
+            Ok(sync_info) => {
+                if sync_info.is_none() {
+                    is_syncing = false;
+                } else {
+                    debug!("{sync_info:?}");
+                }
+
+                if is_syncing {
+                    self.is_syncing.set(1);
+                } else {
+                    self.is_syncing.set(0);
+                }
+            }
+            Err(err) => {
+                error!("{err:?}");
+            }
+        };
+
+        // Set the latest block from the RPC
+        let current_block = rpc_client.current_block().await?;
+        self.rpc_current_block.set(current_block as f64);
+
+        Ok(())
     }
 
     pub async fn update_for_validators(
