@@ -41,3 +41,30 @@ impl ResponseError for HypermonError {
         }
     }
 }
+
+impl From<web3::Error> for HypermonError {
+    fn from(value: web3::Error) -> Self {
+        match value {
+            web3::Error::Unreachable => {
+                HypermonError::RpcClientError(anyhow::anyhow!("RPC is unreachable!"))
+            }
+            web3::Error::Decoder(s) => {
+                HypermonError::RpcClientError(anyhow::anyhow!("Decoding error: {s:?}"))
+            }
+            web3::Error::InvalidResponse(s) => {
+                HypermonError::RpcClientError(anyhow::anyhow!("Invalid response from RPC: {s:?}"))
+            }
+            web3::Error::Transport(s) => {
+                HypermonError::RpcClientError(anyhow::anyhow!("RPC Transport Error: {s:?}"))
+            }
+            web3::Error::Rpc(s) => HypermonError::RpcClientError(anyhow::anyhow!("RPC Error: {s:?}")),
+            web3::Error::Io(s) => HypermonError::RpcClientError(anyhow::anyhow!("RPC IO Error: {s:?}")),
+            web3::Error::Recovery(s) => {
+                HypermonError::RpcClientError(anyhow::anyhow!("RPC Recovery Error: {s:?}"))
+            }
+            web3::Error::Internal => {
+                HypermonError::RpcClientError(anyhow::anyhow!("Internal RPC Error"))
+            }
+        }
+    }
+}
