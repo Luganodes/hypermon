@@ -4,8 +4,6 @@ use tracing::{error, info};
 use crate::{server, types::HypermonError};
 
 pub async fn start(args: &ArgMatches) -> Result<(), HypermonError> {
-    let only_metrics = args.get_one::<bool>("only-metrics").copied().unwrap();
-    let only_telegram = args.get_one::<bool>("only-telegram").copied().unwrap();
     let tg_api_key = args
         .get_one::<String>("tg-api-key")
         .map(|s| s.clone())
@@ -22,8 +20,6 @@ pub async fn start(args: &ArgMatches) -> Result<(), HypermonError> {
 
     info!("===================");
     info!("Args found: ");
-    info!("--only-metrics?: {}", only_metrics);
-    info!("--only-telegram?: {}", only_telegram);
     info!("--tg-api-key: {:?}", tg_api_key);
     info!("--tg-chat-id: {:?}", tg_chat_id);
     info!("--metrics-port: {}", metrics_port);

@@ -22,10 +22,8 @@ hypermon start
 Flags:
 | Name | Default | Description |
 | ----------- | ----------- | ----------- |
-| `--only-telegram` | false | Only start the telegram notifications. |
-| `--only-metrics` | false | Only start the metrics server. |
-| `--tg-api-key` | NONE | If `--only-telegram` is set, this is the TG bot's API key. |
-| `--tg-chat-id` | NONE | If `--only-telegram` is set, this is the TG channel's ID. |
+| `--tg-api-key` | NONE | This is the TG bot's API key. |
+| `--tg-chat-id` | NONE | This is the TG channel's ID. |
 | `--metrics-port` | 6969 | The port on which the metrics server should serve metrics. |
 | `--metrics-addr` | 0.0.0.0 | The address on which the metrics server should serve metrics. |
 | `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics. |
@@ -90,7 +88,7 @@ hyperliquid_rpc_url
 - [x] Create setup script for easy download and systemd service setup
 - [x] Add a metric to show the info-url and evm rpc url being used
 - [x] Pull valuable/necessary info from EVM RPC if it is provided
-- [ ] Fix `--only-*` flags
+- ~~[ ] Fix `--only-*` flags~~
 - [ ] Show valuable info from the data directory
 - [ ] Add a metric to show version of the node binary
 - [ ] Add the ability to issue an unjail whenever the validator is jailed

@@ -27,22 +27,6 @@ async fn main() -> anyhow::Result<()> {
                 .about("Start monitoring")
                 .arg_required_else_help(false)
                 .args([
-                    Arg::new("only-telegram")
-                        .value_name("BOOL")
-                        .long("only-telegram")
-                        .value_parser(value_parser!(bool))
-                        .num_args(0..=1)
-                        .default_value("false")
-                        .default_missing_value("true")
-                        .requires("tg-api-key")
-                        .requires("tg-chat-id"),
-                    Arg::new("only-metrics")
-                        .value_name("BOOL")
-                        .long("only-metrics")
-                        .value_parser(value_parser!(bool))
-                        .num_args(0..=1)
-                        .default_value("false")
-                        .default_missing_value("true"),
                     Arg::new("tg-api-key")
                         .long("tg-api-key")
                         .requires("tg-chat-id")
