@@ -4,6 +4,7 @@ LATEST_TAG=$(curl "https://api.github.com/repos/Luganodes/hypermon/tags" | jq -r
 DESTINATION_DIR="/usr/local/bin"
 DOWNLOAD_LINK="https://github.com/Luganodes/hypermon/releases/download/$LATEST_TAG/hypermon"
 BINARY_NAME="hypermon"
+SERVICE_FILE="/etc/systemd/system/hypermon.service"
 
 # Function to check OS type
 check_os_type() {
@@ -42,11 +43,39 @@ install_binary() {
   fi
 }
 
+install_service() {
+  echo "Installing service..."
+
+cat <<EOF | sudo tee $SERVICE_FILE > /dev/null
+[Unit]
+Description=Hyperliquid Validator Monitoring Daemon
+After=network.target
+
+[Service]
+User=$USER
+Type=simple
+ExecStart=$DESTINATION_DIR/$BINARY_NAME start --rpc-url=http://localhost:3001/evm
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  echo "Reloading systemd daemon..."
+  sudo systemctl daemon-reload
+}
+
 # Check the OS type
 check_os_type
 
 # Install the binary
 install_binary
 
+# Install service
+install_service
+
 # Success message
 echo "Installation complete."
+echo "Please edit /etc/systemd/system/hypermon.service if needed"
+echo "Then run"
+echo "sudo systemctl daemon-reload && sudo systemctl restart hypermon"
