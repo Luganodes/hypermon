@@ -78,4 +78,4 @@ install_service
 echo "Installation complete."
 echo "Please edit /etc/systemd/system/hypermon.service if needed"
 echo "Then run"
-echo "sudo systemctl daemon-reload && sudo systemctl restart hypermon"
+echo "sudo systemctl daemon-reload && sudo systemctl enable hypermon && sudo systemctl restart hypermon"
