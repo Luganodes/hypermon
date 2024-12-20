@@ -73,8 +73,8 @@ async fn get_metrics(
 
     let (encoder, mut buffer) = metrics.get_encoder_and_buffer()?;
     let info_url_metric = format!("# HELP hyperliquid_info_url The Hyperliquid Info URL being used\n# TYPE hyperliquid_info_url gauge\nhyperliquid_info_url{{url=\"{}\"}} 1", info_url.to_string()).into_bytes();
-    let rpc_url_metric = format!("\n# HELP hyperliquid_rpc_url The Hyperliquid RPC URL being used\n# TYPE hyperliquid_rpc_url gauge\nhyperliquid_rpc_url '{}'\n", rpc_url).as_bytes().to_vec();
-
+    let rpc_url_metric = format!("\n# HELP hyperliquid_rpc_url The Hyperliquid RPC URL being used\n# TYPE hyperliquid_rpc_url gauge\nhyperliquid_rpc_url{{url=\"{}\"}} 1\n",rpc_url).into_bytes();
+    
     buffer.extend(&info_url_metric);
     buffer.extend(&rpc_url_metric);
 
