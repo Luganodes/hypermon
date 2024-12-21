@@ -2,7 +2,7 @@
 name = "hypermon"
 version = "0.4.1"
 edition = "2021"
-rust-version = "1.80.1"
+rust-version = "1.83.0"
 
 build = "build.rs"
 
