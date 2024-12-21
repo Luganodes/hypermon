@@ -65,6 +65,16 @@ async fn main() -> anyhow::Result<()> {
                         .help("Show all information for only the validator address given")
                         .long("filter-address")
                         .default_value("0x1ab189b7801140900c711e458212f9c76f8dac79"),
+                    Arg::new("only-jailed")
+                        .value_parser(value_parser!(bool))
+                        .help("Show only the jailed validators")
+                        .long("only-jailed")
+                        .action(clap::ArgAction::SetTrue),
+                    Arg::new("only-active")
+                        .value_parser(value_parser!(bool))
+                        .help("Show only the active validators")
+                        .long("only-active")
+                        .action(clap::ArgAction::SetTrue),
                 ]),
         )
         .get_matches();

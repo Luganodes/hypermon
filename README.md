@@ -38,6 +38,8 @@ Flags:
 | Name | Default | Description |
 | ----------- | ----------- | ----------- |
 | `--info-url` | https://api.hyperliquid-testnet.xyz/info | The Info URL to scrape metrics from. Change this to scrape Mainnet metrics. |
+| `--only-jailed` | false | Show only jailed validators |
+| `--only-active` | false | Show only active validators |
 | `--filter-address` | 0x1ab189b7801140900c711e458212f9c76f8dac79 | The address to highlight as green when showing the network info. |
 
 ## Metrics Served
@@ -86,9 +88,10 @@ hyperliquid_rpc_url
 - [x] Add support for telegram notifications
 - [x] Add a TUI dashboard to view the network info for all validators
 - [x] Create setup script for easy download and systemd service setup
-- [x] Add a metric to show the info-url and evm rpc url being used
 - [x] Pull valuable/necessary info from EVM RPC if it is provided
 - ~~[ ] Fix `--only-*` flags~~
+- [x] Add `--only-jailed` flag on `show` to show only jailed validators
+- [x] Add `--only-active` flag on `show` to show only active validators
 - [ ] Show valuable info from the data directory
 - [ ] Add a metric to show version of the node binary
 - [ ] Add the ability to issue an unjail whenever the validator is jailed
