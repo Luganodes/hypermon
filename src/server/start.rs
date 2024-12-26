@@ -1,5 +1,5 @@
 use actix_web::{
-    dev::Server,
+    dev::{Path, Server},
     http::StatusCode,
     web::{self, Data},
     App, HttpRequest, HttpResponse, HttpResponseBuilder, HttpServer,
@@ -41,6 +41,7 @@ pub async fn start(
     let server = HttpServer::new(move || {
         App::new()
             .route("/", web::get().to(health_check))
+            .route("/jailed/{address}", web::get().to(validator_jailed))
             .route("/metrics", web::get().to(get_metrics))
             .app_data(web::Data::new(client.clone()))
             .app_data(web::Data::new(rpc_client.clone()))
@@ -74,13 +75,33 @@ async fn get_metrics(
     let (encoder, mut buffer) = metrics.get_encoder_and_buffer()?;
     let info_url_metric = format!("# HELP hyperliquid_info_url The Hyperliquid Info URL being used\n# TYPE hyperliquid_info_url gauge\nhyperliquid_info_url{{url=\"{}\"}} 1", info_url.to_string()).into_bytes();
     let rpc_url_metric = format!("\n# HELP hyperliquid_rpc_url The Hyperliquid RPC URL being used\n# TYPE hyperliquid_rpc_url gauge\nhyperliquid_rpc_url{{url=\"{}\"}} 1\n",rpc_url).into_bytes();
-    
+
     buffer.extend(&info_url_metric);
     buffer.extend(&rpc_url_metric);
 
     Ok(HttpResponseBuilder::new(StatusCode::OK)
         .insert_header(("Content-Type", encoder.format_type()))
         .body(buffer))
+}
+
+async fn validator_jailed(
+    address: web::Path<String>,
+    client: Data<Client>,
+    info_url: Data<String>,
+) -> Result<HttpResponse, HypermonError> {
+    let address = address.into_inner();
+    let validators =
+        get_network_validators(&client, info_url.clone().into_inner().to_string()).await?;
+
+    let val = validators
+        .iter()
+        .find(|&x| x.validator == address && !x.is_jailed);
+
+    if val.is_none() {
+        Err(HypermonError::ValidatorJailedOrNotFound(address))
+    } else {
+        Ok(HttpResponse::Ok().finish())
+    }
 }
 
 async fn health_check(req: HttpRequest) -> HttpResponse {

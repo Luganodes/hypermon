@@ -13,15 +13,18 @@ pub enum HypermonError {
 
     #[error("Register error")]
     RegisterError(#[source] anyhow::Error),
-    
+
     #[error("Error while encoding metric families")]
     EncodeError(#[source] anyhow::Error),
 
     #[error("IO Error: {0}")]
     IOError(#[from] std::io::Error),
-    
+
     #[error("RPC Client Error: {0}")]
     RpcClientError(#[source] anyhow::Error),
+
+    #[error("Validator is jailed or not found: {0}")]
+    ValidatorJailedOrNotFound(String),
 
     #[error("Couldn't unwrap SyncInfo")]
     UnableToUnwrapSyncInfo,
@@ -38,6 +41,7 @@ impl ResponseError for HypermonError {
             HypermonError::IOError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             HypermonError::RpcClientError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             HypermonError::UnableToUnwrapSyncInfo => StatusCode::INTERNAL_SERVER_ERROR,
+            HypermonError::ValidatorJailedOrNotFound(_) => StatusCode::NOT_FOUND,
         }
     }
 }
@@ -57,8 +61,12 @@ impl From<web3::Error> for HypermonError {
             web3::Error::Transport(s) => {
                 HypermonError::RpcClientError(anyhow::anyhow!("RPC Transport Error: {s:?}"))
             }
-            web3::Error::Rpc(s) => HypermonError::RpcClientError(anyhow::anyhow!("RPC Error: {s:?}")),
-            web3::Error::Io(s) => HypermonError::RpcClientError(anyhow::anyhow!("RPC IO Error: {s:?}")),
+            web3::Error::Rpc(s) => {
+                HypermonError::RpcClientError(anyhow::anyhow!("RPC Error: {s:?}"))
+            }
+            web3::Error::Io(s) => {
+                HypermonError::RpcClientError(anyhow::anyhow!("RPC IO Error: {s:?}"))
+            }
             web3::Error::Recovery(s) => {
                 HypermonError::RpcClientError(anyhow::anyhow!("RPC Recovery Error: {s:?}"))
             }
