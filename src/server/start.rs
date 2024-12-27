@@ -1,5 +1,5 @@
 use actix_web::{
-    dev::{Path, Server},
+    dev::Server,
     http::StatusCode,
     web::{self, Data},
     App, HttpRequest, HttpResponse, HttpResponseBuilder, HttpServer,
