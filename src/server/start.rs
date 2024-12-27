@@ -6,7 +6,7 @@ use actix_web::{
 };
 use prometheus::Encoder;
 use reqwest::Client;
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::{
     helpers::{get_network_validators, get_request_client, Sender},
@@ -89,6 +89,8 @@ async fn validator_jailed(
     client: Data<Client>,
     info_url: Data<String>,
 ) -> Result<HttpResponse, HypermonError> {
+    info!("Request /jailed/{}", address);
+
     let address = address.into_inner();
     let validators =
         get_network_validators(&client, info_url.clone().into_inner().to_string()).await?;
@@ -98,6 +100,7 @@ async fn validator_jailed(
         .find(|&x| x.validator == address && !x.is_jailed);
 
     if val.is_none() {
+        warn!("Validator {} is jailed!", address);
         Err(HypermonError::ValidatorJailedOrNotFound(address))
     } else {
         Ok(HttpResponse::Ok().finish())
